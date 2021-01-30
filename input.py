@@ -9,6 +9,19 @@ data_main = 0
 
 
 def EnterInfo():
+    
+    
+    print("press 0 twice to skip to reservation if info is already entered")
+    first_inp = input()
+    inp = int(first_inp)
+
+
+    if (inp == 0):
+        return False
+
+
+    
+
     # load credentials
     try:
         with open('credentials.json') as f:
@@ -86,4 +99,4 @@ def EnterInfo():
         json.dump(keys, outfile)
     return True
 
-EnterInfo()
+##EnterInfo()

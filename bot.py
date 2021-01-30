@@ -10,6 +10,12 @@ from datetime import datetime, time
 import pandas
 import numpy
 import bum_encryption as bmi
+import input as main
+import time as t
+
+main.EnterInfo()
+
+
 
 # Delay
 delay = 30
@@ -51,7 +57,7 @@ def preempt_reserve(netID, spot = 0):
     # Wait for login
     try:
         WebDriverWait(b, delay).until(EC.presence_of_element_located((By.ID, 'menu_SCH')))
-        print("Successfully Logged In!")
+        print("Successfully Logged In as", " ", netID)
     except TimeoutException:
         print("Invalid Credentials")
         return False, "InvalidCreds"
@@ -104,13 +110,12 @@ def preempt_reserve(netID, spot = 0):
     # Add to Cart
     times_list[index].find_element_by_xpath('.//*[@class="clslistViewAddToCart"]').click()
 
-    if not place[0]:
-        # Continue
-        b.find_element_by_id('btnContinue').click()
+
+    b.find_element_by_id('btnContinue').click()
 
     return True, b
 
-def reserve(b, waiver):
+def reserve(b):
     try:
         b.find_element_by_id('btnAcceptWaiver').click()
     except:
@@ -134,13 +139,15 @@ def reserve(b, waiver):
 
 print(time_manager.check_before_midnight())
 
-'''
+
 success_dlz, b_dlz = preempt_reserve("dlzhang2")
 success_ssp, b_ssp = preempt_reserve("shreysp3")
+
 while time_manager.check_before_midnight():
-    if success_dlz:
-        reserve(b_dlz)
-    if success_ssp:
-        reserve(b_ssp)
-    time.sleep(1)
-'''
+    t.sleep(1)
+
+
+if success_dlz:
+    reserve(b_dlz)
+if success_ssp:
+    reserve(b_ssp)

@@ -2,13 +2,13 @@ from datetime import datetime, time
 import datetime
 import json
 
-K_START_TIME = datetime.time(23,55)
+K_START_TIME = datetime.time(16,52)
 
 
 def check_before_midnight():
     midnight = K_START_TIME
     right_now = datetime.datetime.now().time()
-    return right_now >= midnight  
+    return right_now <= midnight  
 
 def start_reservation_process(start_time=None):
     if (start_time is None):
