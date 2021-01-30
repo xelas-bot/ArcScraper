@@ -1,0 +1,6 @@
+*.json
+__pycache__/
+.vscode/
+build/
+build\input/
+dist/
