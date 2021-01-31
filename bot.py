@@ -147,6 +147,7 @@ while time_manager.check_before_midnight():
     t.sleep(1)
 
 
+t.sleep(60)
 if success_dlz:
     reserve(b_dlz)
 if success_ssp:

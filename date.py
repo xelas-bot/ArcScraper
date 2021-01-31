@@ -2,7 +2,7 @@ from datetime import datetime, time
 import datetime
 import json
 
-K_START_TIME = datetime.time(16,52)
+K_START_TIME = datetime.time(23,59)
 
 
 def check_before_midnight():
