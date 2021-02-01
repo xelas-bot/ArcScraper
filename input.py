@@ -99,4 +99,4 @@ def EnterInfo():
         json.dump(keys, outfile)
     return True
 
-##EnterInfo()
+    EnterInfo()

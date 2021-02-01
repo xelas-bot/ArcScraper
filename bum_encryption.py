@@ -28,3 +28,5 @@ def decrypt(string, key):
         decoded += chr(ord(p) ^ ord(k))
     
     return decoded
+
+
