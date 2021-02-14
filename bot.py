@@ -10,35 +10,65 @@ from datetime import datetime, time
 import pandas
 import numpy
 import bum_encryption as bmi
+import time as t
 
 # Delay
 delay = 30
 
-def manage_reserve():
-    taken = []
+def wait_till_reserve():
+    while time_manager.check_before_midnight():
+        t.sleep(1)
 
+def wait_for_load(b):
+    try:
+        WebDriverWait(b, delay).until(EC.invisibility_of_element_located((By.ID, "tblProgess")))
+        return True, ""
+    except TimeoutException:
+        print("Loading Wait Failed")
+        return False, "ExceedLoadTime"
 
-def preempt_reserve(netID, spot = 0):
-    b  = webdriver.Chrome(ChromeDriverManager().install())
+def check_if_available(b, time, taken):
+    # Flip to the Right Time
+    times_list = b.find_elements_by_xpath('//*[@class="DgText"]') + b.find_elements_by_xpath('//*[@class="DgTextAlt"]')
+    patrons = [t.find_element_by_xpath('.//*[@align="center"]').text + t.find_element_by_xpath('.//*[@class="clstdResurce"]').text for t in times_list]
+    start_times = [patron[:8] if patron not in taken else "Taken" for patron in patrons]
+    while time not in start_times:
+        try:
+            b.find_element_by_id('ancSchListNext').click()
+            times_list = b.find_elements_by_xpath('//*[@class="DgText"]') + b.find_elements_by_xpath('//*[@class="DgTextAlt"]')
+            patrons = [t.find_element_by_xpath('.//*[@align="center"]').text + t.find_element_by_xpath('.//*[@class="clstdResurce"]').text for t in times_list]
+            start_times = [patron[:8] if patron not in taken else "Taken" for patron in patrons]
+        except:
+            print("Failed to find time")
+            return False, None, "ExceedLoadTime"
+    
+    index = start_times.index(time)
+    return True, times_list[index], patrons[index]
 
-    # Open the Website
-    b.get('https://hnd-p-ols.spectrumng.net/IllinoisCampusRec/Login.aspx?ReturnUrl=%2fillinoiscampusrec')
-
+def preempt_reserve(netID, spot, taken):
     # Get credentials
     with open('credentials.json') as f:
         creds = json.load(f)
-    
+
+    # Check if should reserve
+    if not time_manager.reserve_today(creds, netID, spot):
+        return False, "NotReserveToday", taken
+
+    # Open the Website
+    b  = webdriver.Chrome(ChromeDriverManager().install())
+    b.get('https://hnd-p-ols.spectrumng.net/IllinoisCampusRec/Login.aspx?ReturnUrl=%2fillinoiscampusrec')
+
     # Get keys
     with open('keys.json') as f:
         keys = json.load(f)
     
-    # Get places
-    with open('reservations.json') as f:
-        places = json.load(f)
-    
     if netID not in keys:
         print("You don't have your key stored")
-        return False, "NoPass"
+        return False, "NoPass", taken
+    
+    if len(creds[netID]['Places']) == 0:
+        print("No reservations for " + netID)
+        return False, "NoReservations", taken
 
     password = creds[netID]['Password']
     place = creds[netID]['Places'][spot]
@@ -55,95 +85,106 @@ def preempt_reserve(netID, spot = 0):
         print("Successfully Logged In!")
     except TimeoutException:
         print("Invalid Credentials")
-        return False, "InvalidCreds"
+        return False, "InvalidCreds", taken
     
     date_url = time_manager.getURL(place)
     b.get(date_url)
-
-    try:
-        WebDriverWait(b, delay).until(EC.invisibility_of_element_located((By.ID, "tblProgess")))
-        print("Load done")
-    except TimeoutException:
-        print("???")
-        return False, "ExceedLoadTime"
     print("Changed to reservation site")
 
-    if place[0]:
+
+    with open('reservations.json') as f:
+        reservations = json.load(f)
+    if reservations[place]["List"]:
         # Switch to list
+        success, err = wait_for_load(b)
+        if not success:
+            return False, err, taken
         element = b.find_element_by_id('ancSchListView')
         webdriver.ActionChains(b).move_to_element(element).click(element).perform()
-        pass
 
     # Select all
+    success, err = wait_for_load(b)
+    if not success:
+        return False, err
     b.find_element_by_id('ancSchSelectAll').click()
     b.find_element_by_id('ancSchSearch').click()
 
-    try:
-        WebDriverWait(b, delay).until(EC.invisibility_of_element_located((By.ID, "tblProgess")))
-        print("Load done")
-    except TimeoutException:
-        print("???")
-        return False, "ExceedLoadTime"
+    success, err = wait_for_load(b)
+    if not success:
+        return False, err, taken
+    
+    # Get the time
+    print(taken)
+    success, row, patron = check_if_available(b, time, taken)
 
-    # Find Reservation Time
-    times_list = b.find_elements_by_xpath('//*[@class="DgText"]') + b.find_elements_by_xpath('//*[@class="DgTextAlt"]')
-    start_times = [t.find_element_by_xpath('.//*[@align="center"]').text for t in times_list]
-
-    # Flip to the Right Time
-    while not time in start_times:
-        try:
-            b.find_element_by_id('ancSchListNext').click()
-            times_list = b.find_elements_by_xpath('//*[@class="DgText"]') + b.find_elements_by_xpath('//*[@class="DgTextAlt"]')
-            start_times = [t.find_element_by_xpath('.//*[@align="center"]').text for t in times_list]
-        except:
-            print("Failed to find time")
-            return False, "ExceedLoadTime"
-        
-    # Get the index
-    index = start_times.index(time)
+    if not success:
+        return False, patron, taken
 
     # Add to Cart
-    times_list[index].find_element_by_xpath('.//*[@class="clslistViewAddToCart"]').click()
+    row.find_element_by_xpath('.//*[@class="clslistViewAddToCart"]').click()
+    taken.append(patron)
 
-    if not place[0]:
-        # Continue
-        b.find_element_by_id('btnContinue').click()
+    # Continue
+    b.find_element_by_id('btnContinue').click()
 
-    return True, b
+    return True, b, taken
 
 def reserve(b):
     try:
         b.find_element_by_id('btnAcceptWaiver').click()
     except:
-        pass
+        return False, "FailedAccept"
+    return True, b
 
-    try:
-        WebDriverWait(b, delay).until(EC.invisibility_of_element_located((By.ID, "tblProgess")))
-        print("Load done")
-    except TimeoutException:
-        print("???")
-        return False, "ExceedLoadTime"
+def finish(b):
+    #success, err = wait_for_load(b)
+    #if not success:
+    #    return False, err
 
     # Add to Cart
     try:
-        b.find_element_by_id('ctl00_pageContentHolder_btnContinueCart').click()
+        el = WebDriverWait(b, delay).until(EC.element_to_be_clickable((By.ID, "ctl00_pageContentHolder_btnContinueCart")))
+        el.click()
+        #b.find_element_by_id("ctl00_pageContentHolder_btnContinueCart").click()
     except:
         print("Failed to reserve, too early!")
         return False, "FailedReserve"
+
+def reserve_all(safety = 1):
+    # Get credentials
+    with open('credentials.json') as f:
+        creds = json.load(f)
     
-    return True
+    # Preemptively reserve everyone
+    print("Start Reservations for date: " + str(time_manager.get_weekdate()) + "!")
+    taken = []
+    browsers = []
+    for i in range(safety):
+        for person in creds.keys():
+            for i in range(len(creds[person]["Dates"])):
+                success, b, taken = preempt_reserve(person, i, taken)
+                if success:
+                    print("Finished reservation of spot: " + taken[-1])
+                    browsers.append(b)
+    
+    print("Start the Wait!")
+    # Wait till 7:30
+    wait_till_reserve()
+    for b in browsers:
+        reserve(b)
+    for b in browsers:
+        finish(b)
+    print("Finished")
+    return browsers
 
-print(time_manager.check_before_midnight())
+def reserve_all_everyday(safety = 1):
+    while True:
+        while time_manager.check_before_start():
+            t.sleep(60)
+        reserve_all(safety)
+        
 
-
-success_dlz, b_dlz = preempt_reserve("dlzhang2")
-success_ssp, b_ssp = preempt_reserve("shreysp3")
-while time_manager.check_before_midnight():
-    time.sleep(1)
-if success_dlz:
-    reserve(b_dlz)
-if success_ssp:
-    reserve(b_ssp)
-
-23:55-23:59
-00:00 <-
+reserve_all_everyday(2)
+#b = reserve_all(2)
+#while True:
+#    t.sleep(60)

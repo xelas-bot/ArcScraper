@@ -1,4 +1,18 @@
 {
-    //"North Lane":  [true, "https://hnd-p-ols.spectrumng.net/IllinoisCampusRec/Members/Scheduler/BookSchedule.aspx?siteid=1335&catid=e5b11533-f5ba-4d63-a694-66c579f48ee8&provid=0&serviceid=ac30a82c-1b4a-4af7-a7a9-874307c41ff0&d=", "&du=45"],
-    "Lower Level": [false, "https://hnd-p-ols.spectrumng.net/IllinoisCampusRec/Members/Scheduler/BookSchedule.aspx?siteid=1335&catid=252248be-af49-4103-8ad9-b8a67e3f2997&provid=0&serviceid=63e2a31a-d469-4d90-b2c9-e1da4acb8d4e&d=", "&du=75"]
+    "Lower Level": {
+        "Times": {
+                    "Weekday": ["07:30 AM", "09:00 AM", "10:30 AM", "12:00 AM", "01:30 PM", "03:00 PM", "04:30 PM", "06:00 PM"],
+                    "Weekend": ["11:45 AM", "01:15 PM", "02:45 PM", "04:15 PM", "05:45 PM"]
+        },
+        "URL": ["https://hnd-p-ols.spectrumng.net/IllinoisCampusRec/Members/Scheduler/BookSchedule.aspx?siteid=1335&catid=252248be-af49-4103-8ad9-b8a67e3f2997&provid=0&serviceid=63e2a31a-d469-4d90-b2c9-e1da4acb8d4e&d=", "&du=75"],
+        "List": false
+    },
+    "North Lane": {
+        "Times": {
+            "Weekday": ["02:00 PM"],
+            "Weekend": ["02:00 PM"]
+        },
+        "URL": ["https://hnd-p-ols.spectrumng.net/IllinoisCampusRec/Members/Scheduler/BookSchedule.aspx?siteid=1335&catid=e5b11533-f5ba-4d63-a694-66c579f48ee8&provid=0&serviceid=ac30a82c-1b4a-4af7-a7a9-874307c41ff0&d=", "&du=45"],
+        "List": true
+    }
 }

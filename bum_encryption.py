@@ -2,7 +2,7 @@ import json
 import random
 
 # SUPER TOP SECRET NOT XOR ENCRYPTION HAPPENNING HERE
-letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[]{}|:;<>?,./!@#$%^&*()'
+letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=[]|:;<>?,.!@#$%^&*()'
 
 def generate_key_encrypt(string):
     # :)
