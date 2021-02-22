@@ -19,7 +19,7 @@ def get_weekdate_name(date):
 
 def check_before_start():
     right_now = datetime.datetime.now().time()
-    return right_now <= K_START_TIME
+    return right_now <= K_START_TIME or right_now >= K_TEST_TIME
 
 def start_reservation_process(start_time=None):
     if (start_time is None):

@@ -55,7 +55,7 @@ def preempt_reserve(netID, spot, taken):
         return False, "NotReserveToday", taken
 
     # Open the Website
-    b  = webdriver.Chrome(ChromeDriverManager().install())
+    b = webdriver.Chrome(ChromeDriverManager().install())
     b.get('https://hnd-p-ols.spectrumng.net/IllinoisCampusRec/Login.aspx?ReturnUrl=%2fillinoiscampusrec')
 
     # Get keys
@@ -181,6 +181,7 @@ def reserve_all_everyday(safety = 1):
     while True:
         while time_manager.check_before_start():
             t.sleep(60)
+        print(time_manager.check_before_start())
         reserve_all(safety)
         
 
